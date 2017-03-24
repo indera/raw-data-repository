@@ -99,7 +99,7 @@ def _is_self_request():
 
 def get_validated_user_info():
   """Returns a valid (user email, user info), or raises Unauthorized."""
-  user_email = get_oauth_id()   
+  user_email = get_oauth_id()
 
   # Allow clients to simulate an unauthentiated request (for testing)
   # becaues we haven't found another way to create an unauthenticated request
