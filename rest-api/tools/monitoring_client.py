@@ -68,7 +68,8 @@ def main(args):
   monitoring = create_monitoring_client(project_info[0], credentials)
   policies_api = monitoring.projects().alertPolicies()
 
-  existing_policies = list(list_policies(policies_api, project_info[1]))
+  project_id = project_info[1]
+  existing_policies = list(list_policies(policies_api, project_id))
   local_policies = read_policies(args.policy_file)
   if args.update:
     existing_policy_map = { policy['name']: policy for policy in existing_policies}
@@ -76,21 +77,21 @@ def main(args):
     for policy in local_policies:
       policy_name = policy.get('name')
       if policy_name:
-        existing_policy = existing_policy_map.get(policy.name)
+        existing_policy = existing_policy_map.get(policy_name)
         if not existing_policy:
-          logging.info('Policy %s does not exist, creating with new name.' % policy.name)
+          logging.info('Policy %s does not exist, creating with new name.', policy_name)
           del policy[policy_name]
-          create_policy(policies_api, policy)
+          create_policy(policies_api, project_id, policy)
         else:
           if existing_policy == policy:
-            logging.info('Policy %s remains unchanged.')
+            logging.info('Policy %s remains unchanged.', policy_name)
           else:
-            logging.info('Updating policy %s.')
-            update_policy(policies_api, policy)
+            logging.info('Updating policy %s.', policy_name)
+            update_policy(policies_api, project_id, policy)
       else:
         logging.info('Creating policy.')
-        create_policy(policies_api, policy)
-    existing_policies = list(list_policies(policies_api, project_info[1]))
+        create_policy(policies_api, project_id, policy)
+    existing_policies = list(list_policies(policies_api, project_id))
   write_policies(args.policy_file, existing_policies)
 
 if __name__ == '__main__':
@@ -105,5 +106,6 @@ if __name__ == '__main__':
                       required=True)
   parser.add_argument('--update',
                       help='Specify this if you want to import policies to the file and export ' +
-                      'afterwards; do not specify it if you want to solely export')
+                      'afterwards; do not specify it if you want to solely export',
+                      action='store_true')
   main(parser.parse_args())
