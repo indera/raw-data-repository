@@ -40,6 +40,9 @@ then
 elif [ "${PROJECT}" == "all-of-us-rdr-dryrun" ]
 then
   CONFIG="config/config_dryrun.json"
+elif [ "${PROJECT}" == "all-of-us-rdr-dev" ]
+then
+  CONFIG="config/config_dev_deployed.json"
 else
   echo "Unsupported project: ${PROJECT}; exiting."
   usage
@@ -86,7 +89,7 @@ then
   exit 1
 fi
 
-set -e
+#set -e
 echo "${BOLD}Checking out code...${NONE}"
 git checkout $VERSION
 
