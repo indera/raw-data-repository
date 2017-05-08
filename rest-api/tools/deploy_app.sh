@@ -90,6 +90,9 @@ set -e
 echo "${BOLD}Checking out code...${NONE}"
 git checkout $VERSION
 
+BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+export PYTHONPATH=$PYTHONPATH:${BASE_DIR}:${BASE_DIR}/lib
+
 if [ "$TARGET" == "all" ] || [ "$TARGET" == "db" ]
 then
   echo "${BOLD}Upgrading database...${NONE}"
