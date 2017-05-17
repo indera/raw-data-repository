@@ -14,10 +14,10 @@ PROJECT_MAP = {'pmi-drc-api-test': ('AIzaSyCAuQdK6L5AU7c1EOhkeJwEw-7oCs5HsiE', '
             'all-of-us-rdr-prod': ('AIzaSyAUcQj4l-8DfqS5-A_InN7VD8ZN_lLtflU', '106251944765')}
 
 def create_monitoring_client(api_key, credentials):
-   discovery_base_url='https://monitoring.googleapis.com/$discovery/rest'
-   discovery_visibility='STACKDRIVER_ALERTING_TRUSTED_TESTER'
-   discovery_url=('%s?labels=%s&key=%s' %
-                  (discovery_base_url, discovery_visibility, api_key))
+  discovery_base_url = 'https://monitoring.googleapis.com/$discovery/rest'
+  discovery_visibility = 'STACKDRIVER_ALERTING_TRUSTED_TESTER'
+  discovery_url = ('%s?labels=%s&key=%s' %
+                   (discovery_base_url, discovery_visibility, api_key))
    return build(
         'monitoring',
         'v3',
@@ -53,7 +53,7 @@ def read_policies(policy_file):
 
 def write_policies(policy_file, policies):
   with open(policy_file, 'w') as fp:
-    policy_json = { 'policies': policies }
+    policy_json = {'policies': policies}
     json.dump(policy_json, fp, indent=4)
   logging.info('Wrote %d policies to %s.' % (len(policies), policy_file))
 
@@ -72,7 +72,7 @@ def main(args):
   existing_policies = list(list_policies(policies_api, project_id))
   local_policies = read_policies(args.policy_file)
   if args.update:
-    existing_policy_map = { policy['name']: policy for policy in existing_policies}
+    existing_policy_map = {policy['name']: policy for policy in existing_policies}
 
     for policy in local_policies:
       policy_name = policy.get('name')
