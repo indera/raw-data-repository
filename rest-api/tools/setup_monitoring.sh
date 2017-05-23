@@ -23,7 +23,7 @@ then
   exit 1
 fi
 
-POLICY_FILE=config/alerts/$PROJECT.json
+TEMPLATES_FILE=config/alerts/alert_templates.json
 
 if [ -z "${ACCOUNT}" ]
 then
@@ -42,4 +42,4 @@ export PYTHONPATH=$PYTHONPATH:${BASE_DIR}:${BASE_DIR}/lib
 source tools/auth_setup.sh
 
 (export GOOGLE_APPLICATION_CREDENTIALS="${CREDS_FILE}"; cd ${BASE_DIR};
- python tools/monitoring_client.py --project $PROJECT --policy_file $POLICY_FILE $EXTRA_ARGS)
+ python tools/monitoring_client.py --project $PROJECT --templates_file $TEMPLATES_FILE $EXTRA_ARGS)
