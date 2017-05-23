@@ -17,9 +17,6 @@ PROJECT_MAP = {'pmi-drc-api-test': {'api_key': 'AIzaSyCAuQdK6L5AU7c1EOhkeJwEw-7o
             'all-of-us-rdr-staging': {'api_key': 'AIzaSyB3A9zGsvc9DPCdTXleXIs9wHRIRUbfA-E',
                                       'project_id': '261005263653',
                                       'notification_channel_ids': ['1726500439316347724']},
-            'all-of-us-rdr-dryrun': {'api_key': 'AIzaSyDWsIYuhfLO5CWnTuiw1Bm8m5aSaR8kQQ0',
-                                     'project_id': '90017737200',
-                                     'notification_channel_ids': ['515929249894770147']},
             'all-of-us-rdr-stable': {'api_key': 'AIzaSyBmLhyFlg2q_vxllk27R-3t5ZNzJTf0C40',
                                      'project_id': '812931298053',
                                      'notification_channel_ids': []},
@@ -102,12 +99,12 @@ def main(args):
   local_policies = policy_json.get(_POLICIES_KEY) or []
   local_metric_descriptors = policy_json.get(_METRIC_DESCRIPTORS_KEY) or []
   if args.update:
-    existing_policy_map = {policy['name']: policy for policy in existing_policies}
-    existing_descriptor_map = {descriptor['name']: descriptor
+    existing_policy_map = {policy['displayName']: policy for policy in existing_policies}
+    existing_descriptor_map = {descriptor['type']: descriptor
                                for descriptor in existing_metric_descriptors}
 
     for policy in local_policies:
-      policy_name = policy.get('name')
+      policy_name = policy.get('displayName')
       if policy_name:
         existing_policy = existing_policy_map.get(policy_name)
         if not existing_policy:
@@ -124,18 +121,18 @@ def main(args):
         logging.info('Creating policy.')
         create_policy(policies_api, project_id, policy)
     for metric_descriptor in local_metric_descriptors:
-      descriptor_name = metric_descriptor.get('name')
-      existing_descriptor = existing_descriptor_map.get(descriptor_name)
+      descriptor_type = metric_descriptor.get('type')
+      existing_descriptor = existing_descriptor_map.get(descriptor_type)
       if not existing_descriptor:
-        logging.info('Descriptor %s does not exist, creating.', descriptor_name)
+        logging.info('Descriptor with type %s does not exist, creating.', descriptor_type)
         create_metric_descriptor(metric_descriptors_api, project_id, metric_descriptor)
       else:
         if existing_descriptor == metric_descriptor:
-          logging.info('Descriptor %s remains unchanged.', descriptor_name)
+          logging.info('Descriptor of type %s remains unchanged.', descriptor_type)
         else:
-          logging.warning('Descriptor %s differs in content (%s vs %s); ' +
+          logging.warning('Descriptor of type %s differs in content (%s vs %s); ' +
                           'rename to make new descriptor.',
-                          descriptor_name, metric_descriptor, existing_descriptor)
+                          descriptor_type, metric_descriptor, existing_descriptor)
     existing_policies = list(list_policies(policies_api, project_id))
     existing_metric_descriptors = list(list_metric_descriptors(metric_descriptors_api, project_id))
   write_policies(args.policy_file, existing_policies, existing_metric_descriptors)
@@ -151,7 +148,7 @@ if __name__ == '__main__':
                       help='A file containing alert policies to import and/or export to',
                       required=True)
   parser.add_argument('--update',
-                      help='Specify this if you want to import policies to the file and export ' +
-                      'afterwards; do not specify it if you want to solely export',
+                      help='Specify this if you want to import policies into Stackdriver; ' +
+                      'do not specify it if you want to export policies',
                       action='store_true')
   main(parser.parse_args())
