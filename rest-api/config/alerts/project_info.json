@@ -1,0 +1,15 @@
+{"pmi-drc-api-test": {"api_key": "AIzaSyCAuQdK6L5AU7c1EOhkeJwEw-7oCs5HsiE",
+                      "project_id": "118972441757",
+                      "notification_channel_ids": ["841940086686265891",
+                                                   "7271756574530877070"]},
+ "all-of-us-rdr-staging": {"api_key": "AIzaSyB3A9zGsvc9DPCdTXleXIs9wHRIRUbfA-E",
+                           "project_id": "261005263653",
+                           "notification_channel_ids": ["1726500439316347724"]},
+ "all-of-us-rdr-stable": {"api_key": "AIzaSyBmLhyFlg2q_vxllk27R-3t5ZNzJTf0C40",
+                          "project_id": "812931298053",
+                          "notification_channel_ids": []},
+ "all-of-us-rdr-prod": {"api_key": "AIzaSyAUcQj4l-8DfqS5-A_InN7VD8ZN_lLtflU",
+                        "project_id": "106251944765",
+                        "notification_channel_ids": ["771610197803600435",
+                                                     "13127179291565379182"]}
+}
