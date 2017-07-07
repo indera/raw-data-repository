@@ -71,107 +71,22 @@ class _AuthenticatedLocust(Locust):
     self.participant_generator = FakeParticipantGenerator(self.client)
 
 
-class VersionCheckUser(_AuthenticatedLocust):
-  # 1 out of 100 users (Locust count of 100 recommended in load_test.sh).
-  weight = 1
-  # Hit the root/version endpoint every 10s.
-  min_wait = 1000 * 10
-  max_wait = min_wait
-  class task_set(TaskSet):  # The "task_set" field name is what's used by the Locust superclass.
-    @task(1)  # task weight: larger number == pick this task more often
-    def index(self):
-      self.client.request_json('')
-
-
-class SyncPhysicalMeasurementsUser(_AuthenticatedLocust):
-  weight = 1
-  # In practice we expect 1 sync request/minute. Use the default 1s wait time here.
-  class task_set(TaskSet):
-    @task(1)
-    def get_sync(self):
-      next_url = 'PhysicalMeasurements/_history'
-      absolute_path = False
-      while next_url:
-        history = self.client.request_json(next_url, absolute_path=absolute_path)
-        link = history.get('link')
-        if link and link[0]['relation'] == 'next':
-          next_url = link[0]['url']
-          absolute_path = True
-        else:
-          next_url = None
-
-
-class SignupUser(_AuthenticatedLocust):
-  weight = 88
-  # We estimate 100-1000 signups/day or 80-800s between signups (across all users).
-  # Simulate 2 signups/s across a number of users for the load test.
-  min_wait = weight * 500
-  max_wait = min_wait
-  class task_set(TaskSet):
-    @task(1)
-    def register_participant(self):
-      self.locust.participant_generator.generate_participant(
-          True,  # include_physical_measurements
-          True)  # include_biobank_orders
-
-
 class HealthProUser(_AuthenticatedLocust):
   """Queries run by HealthPro: look up user by name + dob or ID, and get summaries."""
-  weight = 10
+  weight = 1
   # We (probably over)estimate 100-1000 summary or participant queries/day (per task below).
-  min_wait = weight * 1000 * 40
-  max_wait = min_wait
+  min_wait = 10 * 1000
+  max_wait = 60 * 1000
 
   class task_set(TaskSet):
     def __init__(self, *args, **kwargs):
       super(HealthProUser.task_set, self).__init__(*args, **kwargs)
-      self.participant_ids = []
-      self.participant_name_dobs = []
-
-    def on_start(self):
-      """Fetches some participant data from the work queue API for subsequent tasks."""
-      absolute_path = False
-      summary_url = 'ParticipantSummary?hpoId=PITT'
-      for _ in xrange(3):  # Fetch a few pages of participants.
-        resp = self.client.request_json(summary_url, absolute_path=absolute_path)
-        for summary in resp['entry']:
-          resource = summary['resource']
-          self.participant_ids.append(resource['participantId'])
-          try:
-            self.participant_name_dobs.append(
-                [resource[k] for k in ('firstName', 'lastName', 'dateOfBirth')])
-          except KeyError:
-            pass  # Ignore some participants, missing DOB.
-        if 'link' in resp and resp['link'][0]['relation'] == 'next':
-          summary_url = resp['link'][0]['url']
-          absolute_path = True
-        else:
-          break
-
-    @task(1)
-    def get_participant_by_id(self):
-      self.client.request_json('Participant/%s' % random.choice(self.participant_ids))
-
-    @task(1)
-    def get_participant_summary_by_id(self):
-      self.client.request_json(
-          'Participant/%s/Summary' % random.choice(self.participant_ids))
-
-    @task(1)
-    def look_up_participant_by_name_dob(self):
-      _, last_name, dob = random.choice(self.participant_name_dobs)
-      self.client.request_json('ParticipantSummary?dateOfBirth=%s&lastName=%s' % (dob, last_name))
 
     @task(1)
     def query_summary(self):
-      available_params = (
-        ('ageRange', random.choice(('0-17', '18-25', '66-75'))),
-        ('physicalMeasurementsStatus', 'COMPLETED'),
-        ('race', random.choice(('UNSET', 'ASIAN', 'WHITE', 'HISPANIC_LATINO_OR_SPANISH'))),
-        ('state', random.choice(('PIIState_MA', 'PIIState_CA', 'PIIState_TX'))),
-      )
-      search_params = dict(random.sample(
-          available_params,
-          random.randint(1, len(available_params))))
-      search_params['hpoId'] = random.choice(('PITT', 'UNSET', 'COLUMBIA'))
+      search_params = {
+        'hpoId': random.choice(('PITT', 'UNSET', 'COLUMBIA')),
+        'desc': 'consentForStudyEnrollmentTime',
+        '_count': '1000',
+      }
       self.client.request_json('ParticipantSummary?%s' % urlencode(search_params))
