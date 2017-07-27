@@ -125,25 +125,28 @@ class BaseApi(Resource):
   def _make_bundle(self, results, id_field, participant_id):
     import main
     bundle_dict = {"resourceType": "Bundle", "type": "searchset"}
-    if results.pagination_token:
-      query_params = request.args.copy()
-      query_params['_token'] = results.pagination_token
-      next_url = main.api.url_for(self.__class__, _external=True, **query_params)
-      bundle_dict['link'] = [{"relation": "next", "url": next_url}]
+    with Profiled('add pagination token'):
+      if results.pagination_token:
+        query_params = request.args.copy()
+        query_params['_token'] = results.pagination_token
+        next_url = main.api.url_for(self.__class__, _external=True, **query_params)
+        bundle_dict['link'] = [{"relation": "next", "url": next_url}]
     entries = []
     for item in results.items:
-      json = self.dao.to_client_json(item)
-      if participant_id:
-        full_url = main.api.url_for(self.__class__,
-                                    id_=json[id_field],
-                                    p_id=to_client_participant_id(participant_id),
-                                    _external=True)
-      else:
-        full_url = main.api.url_for(self.__class__,
-                                    p_id=json[id_field],
-                                    _external=True)
-      entries.append({"fullUrl": full_url,
-                     "resource": json})
+      with Profiled('serialize one item'):
+        with Profiled('to_client_json'):
+          json = self.dao.to_client_json(item)
+        if participant_id:
+          full_url = main.api.url_for(self.__class__,
+                                      id_=json[id_field],
+                                      p_id=to_client_participant_id(participant_id),
+                                      _external=True)
+        else:
+          full_url = main.api.url_for(self.__class__,
+                                      p_id=json[id_field],
+                                      _external=True)
+        entries.append({"fullUrl": full_url,
+                       "resource": json})
     bundle_dict['entry'] = entries
     return bundle_dict
 

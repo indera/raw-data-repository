@@ -4,6 +4,8 @@ from query import OrderBy, PropertyType
 from werkzeug.exceptions import BadRequest, NotFound
 from sqlalchemy import or_
 
+from pyprofiling import Profiled
+
 from api_util import format_json_date, format_json_enum, format_json_code, format_json_hpo
 import clock
 import config
@@ -246,7 +248,8 @@ class ParticipantSummaryDao(UpdatableDao):
     return EnrollmentStatus.INTERESTED
 
   def to_client_json(self, model):
-    result = model.asdict()
+    with Profiled('asdict'):
+      result = model.asdict()
     # Participants that withdrew more than 48 hours ago should have fields other than
     # WITHDRAWN_PARTICIPANT_FIELDS cleared.
     if (model.withdrawalStatus == WithdrawalStatus.NO_USE and
@@ -257,19 +260,24 @@ class ParticipantSummaryDao(UpdatableDao):
     biobank_id = result.get('biobankId')
     if biobank_id:
       result['biobankId'] = to_client_biobank_id(biobank_id)
-    date_of_birth = result.get('dateOfBirth')
-    if date_of_birth:
-      result['ageRange'] = get_bucketed_age(date_of_birth, clock.CLOCK.now())
-    else:
-      result['ageRange'] = UNSET
+    with Profiled('bucket date of birth to age range'):
+      date_of_birth = result.get('dateOfBirth')
+      if date_of_birth:
+        result['ageRange'] = get_bucketed_age(date_of_birth, clock.CLOCK.now())
+      else:
+        result['ageRange'] = UNSET
     format_json_hpo(result, 'hpoId')
-    _initialize_field_type_sets()
-    for fieldname in _DATE_FIELDS:
-      format_json_date(result, fieldname)
-    for fieldname in _CODE_FIELDS:
-      format_json_code(result, fieldname)
-    for fieldname in _ENUM_FIELDS:
-      format_json_enum(result, fieldname)
+    with Profiled('_initialize_field_type_sets'):
+      _initialize_field_type_sets()
+    with Profiled('format_json_dates'):
+      for fieldname in _DATE_FIELDS:
+        format_json_date(result, fieldname)
+    with Profiled('format_json_codes'):
+      for fieldname in _CODE_FIELDS:
+        format_json_code(result, fieldname)
+    with Profiled('format_json_enums'):
+      for fieldname in _ENUM_FIELDS:
+        format_json_enum(result, fieldname)
     if (model.withdrawalStatus == WithdrawalStatus.NO_USE or
         model.suspensionStatus == SuspensionStatus.NO_CONTACT):
       result['recontactMethod'] = 'NO_CONTACT'

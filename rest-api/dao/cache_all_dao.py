@@ -1,3 +1,5 @@
+from pyprofiling import Profiled
+
 from base_dao import UpdatableDao
 from singletons import get_cache
 from sqlalchemy.orm.session import make_transient
@@ -44,26 +46,30 @@ class CacheAllDao(UpdatableDao):
     self.index_field_keys = index_field_keys
     # A cache containing a single EntityCache entry (with key SINGLETON_KEY) that expires after
     # cache_ttl_seconds
-    self.singleton_cache = get_cache(self.model_type, cache_ttl_seconds, self._load_cache)
+    with Profiled('get singleton cache'):
+      self.singleton_cache = get_cache(self.model_type, cache_ttl_seconds, self._load_cache)
 
   def _load_cache(self, key):
     # The only key that should ever be used with the singleton cache is SINGLETON_KEY;
     # it points to an EntityCache.
     assert key == SINGLETON_KEY
-    with self.session() as session:
-      all_entities = session.query(self.model_type).all()
-    return EntityCache(self, all_entities, self.index_field_keys)
+    with Profiled('populate cache'):
+      with self.session() as session:
+        all_entities = session.query(self.model_type).all()
+      return EntityCache(self, all_entities, self.index_field_keys)
 
   def _get_cache(self):
-    with self.singleton_cache.lock:
-      return self.singleton_cache[SINGLETON_KEY]
+    with Profiled('acquire lock and look up cache'):
+      with self.singleton_cache.lock:
+        return self.singleton_cache[SINGLETON_KEY]
 
   def get_with_session(self, session, obj_id, **kwargs):
     #pylint: disable=unused-argument
     return self._get_cache().id_to_entity.get(obj_id)
 
   def get(self, obj_id):
-    return self._get_cache().id_to_entity.get(obj_id)
+    with Profiled('get object from cache'):
+      return self._get_cache().id_to_entity.get(obj_id)
 
   def _invalidate_cache(self):
     with self.singleton_cache.lock:

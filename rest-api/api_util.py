@@ -5,6 +5,8 @@ import logging
 import netaddr
 import string
 
+from pyprofiling import Profiled
+
 from google.appengine.api import app_identity
 from google.appengine.api import oauth
 from google.appengine.ext import ndb
@@ -223,16 +225,20 @@ def format_json_date(obj, field_name, date_format=None):
 
 
 def format_json_code(obj, field_name):
-  field_without_id = field_name[0:len(field_name) - 2]
-  value = obj.get(field_name)
+  with Profiled('extract value'):
+    field_without_id = field_name[0:len(field_name) - 2]
+    value = obj.get(field_name)
   if value:
-    from dao.code_dao import CodeDao
-    code = CodeDao().get(value)
-    if code.mapped:
-      obj[field_without_id] = code.value
-    else:
-      obj[field_without_id] = UNMAPPED
-    del obj[field_name]
+    with Profiled('import CodeDa'):
+      from dao.code_dao import CodeDao
+    with Profiled('get code for value'):
+      code = CodeDao().get(value)
+    with Profiled('write back code value'):
+      if code.mapped:
+        obj[field_without_id] = code.value
+      else:
+        obj[field_without_id] = UNMAPPED
+      del obj[field_name]
   else:
     obj[field_without_id] = UNSET
 
