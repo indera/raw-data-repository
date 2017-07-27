@@ -5,6 +5,8 @@ import logging
 import datetime
 import random
 
+from pyprofiling import Profiled
+
 from fhirclient.models.domainresource import DomainResource
 from fhirclient.models.fhirabstractbase import FHIRValidationError
 from protorpc import messages
@@ -153,8 +155,10 @@ class BaseDao(object):
     if not self.order_by_ending:
       raise BadRequest("Can't query on type %s -- no order by ending speciifed" % self.model_type)
     with self.session() as session:
-      query, field_names = self._make_query(session, query_def)
-      items = query.all()
+      with Profiled('_make_query'):
+        query, field_names = self._make_query(session, query_def)
+      with Profiled('query.all()'):
+        items = query.all()
     if items:
       if len(items) > query_def.max_results:
         # Items, pagination token, and more are available

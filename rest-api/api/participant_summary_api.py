@@ -1,5 +1,7 @@
 import api_util
 
+from pyprofiling import Profiled
+
 from api.base_api import BaseApi
 from api_util import PTC_AND_HEALTHPRO
 from dao.participant_summary_dao import ParticipantSummaryDao
@@ -10,7 +12,8 @@ class ParticipantSummaryApi(BaseApi):
 
   @api_util.auth_required(PTC_AND_HEALTHPRO)
   def get(self, p_id=None):
-    if p_id:
-      return super(ParticipantSummaryApi, self).get(p_id)
-    else:
-      return super(ParticipantSummaryApi, self)._query('participantId')
+    with Profiled('ParticipantSummary GET'):
+      if p_id:
+        return super(ParticipantSummaryApi, self).get(p_id)
+      else:
+        return super(ParticipantSummaryApi, self)._query('participantId')

@@ -1,6 +1,8 @@
 """Base class for API handlers."""
 import api_util
 
+from pyprofiling import Profiled
+
 from query import OrderBy, Query
 from flask import request, jsonify, url_for
 from flask.ext.restful import Resource
@@ -89,9 +91,12 @@ class BaseApi(Resource):
       id_field: name of the field containing the ID used when constructing resource URLs for results
       participant_id: the participant ID under which to perform this query, if appropriate
     """
-    query = self._make_query()
-    results = self.dao.query(query)
-    return self._make_bundle(results, id_field, participant_id)
+    with Profiled('_make_query'):
+      query = self._make_query()
+    with Profiled('run query in DAO'):
+      results = self.dao.query(query)
+    with Profiled('bundle query response'):
+      return self._make_bundle(results, id_field, participant_id)
 
   def _make_query(self):
     field_filters = []
