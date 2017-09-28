@@ -22,7 +22,8 @@ def generate_fake_data(client, args):
                                  args.num_participants - total_participants_created)
     request_body = {'num_participants': participants_for_batch,
                     'include_physical_measurements': args.include_physical_measurements,
-                    'include_biobank_orders': args.include_biobank_orders}
+                    'include_biobank_orders': args.include_biobank_orders,
+                    'include_ppi': args.include_ppi}
     if args.hpo:
       request_body['hpo'] = args.hpo
     logging.info('Generating batch of %d participants.', participants_for_batch)
@@ -51,6 +52,9 @@ if __name__ == '__main__':
   parser.add_argument('--include_biobank_orders',
                       action='store_true',
                       help='True if biobank orders should be created')
+  parser.add_argument('--include_ppi',
+                      action='store_true',
+                      help='Create randomized questionnaire data with new participants.')
   parser.add_argument('--hpo',
                       help='The HPO name to assign participants to; defaults to random choice.')
   parser.add_argument('--create_biobank_samples',
