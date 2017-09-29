@@ -16,7 +16,7 @@ def main(args):
   credentials = ServiceAccountCredentials.from_json_keyfile_name(args.creds_file, [_SCOPE])
   service = discovery.build('sqladmin', 'v1beta4', credentials=credentials)
   table_names = args.tables.split(',')
-  for table in table_names:    
+  for table in table_names:
     uri = args.output_path + '/%s.csv' % table
     logging.info("Exporting %s.%s to %s..." % (args.database, table, uri))
     request_body = {
@@ -31,24 +31,24 @@ def main(args):
           "selectQuery": "select * from %s" % table
         }
       }
-    }  
-    request = service.instances().export(project=args.project, instance=_INSTANCE, 
+    }
+    request = service.instances().export(project=args.project, instance=_INSTANCE,
                                        body=request_body)
-    response = request.execute()    
+    response = request.execute()
     status = response['status']
     if status != 'DONE':
       logging.info("Waiting for export of %s to complete..." % table)
-      while status != 'DONE':    
+      while status != 'DONE':
         sleep(1)
         request = service.operations().get(project=args.project, operation=response['name'])
         response = request.execute()
-        status = response['status']    
+        status = response['status']
     if response.get('error'):
       logging.error("Errors in response: " % response)
       sys.exit(-1)
     else:
       logging.info('Done exporting %s.' % table)
-  
+
 if __name__ == '__main__':
   configure_logging()
   parser = get_parser()
@@ -59,7 +59,7 @@ if __name__ == '__main__':
   parser.add_argument('--creds_file',
                       type=str,
                       help='Path to credentials JSON file.',
-                      required=True)  
+                      required=True)
   parser.add_argument('--output_path',
                       type=str,
                       help='GCS path to write the output files to.',

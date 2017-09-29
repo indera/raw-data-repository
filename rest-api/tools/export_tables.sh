@@ -9,7 +9,7 @@ while true; do
     --creds_account) CREDS_ACCOUNT=$2; shift 2;;
     --project) PROJECT=$2; shift 2;;
     --bucket) BUCKET=$2; shift 2;;
-    --directory) DIRECTORY=$2; shift 2;;    
+    --directory) DIRECTORY=$2; shift 2;;
     --database) DATABASE=$2; shift 2;;
     --tables) TABLES=$2; shift 2;;
     -- ) shift; break ;;
@@ -31,7 +31,7 @@ fi
 
 source tools/auth_setup.sh
 SQL_SERVICE_ACCOUNT=`gcloud sql instances describe --project ${PROJECT} --account ${ACCOUNT} \
-  rdrmaindb | grep serviceAccountEmailAddress | cut -d: -f2`  
+  rdrmaindb | grep serviceAccountEmailAddress | cut -d: -f2`
 gsutil acl ch -u ${SQL_SERVICE_ACCOUNT}:W gs://${BUCKET}
 
 REPO_ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd ../.. && pwd )"

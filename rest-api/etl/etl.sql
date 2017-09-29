@@ -56,8 +56,8 @@ SELECT
         qra.value_datetime,
         co_a.display)               AS value_string,
     qr.questionnaire_response_id    AS questionnaire_response_id,
-    CONCAT('cln.', 
-        CASE 
+    CONCAT('cln.',
+        CASE
             WHEN qra.value_code_id IS NOT NULL THEN 'code'
             WHEN qra.value_integer IS NOT NULL THEN 'int'
             WHEN qra.value_decimal IS NOT NULL THEN 'dec'
@@ -84,13 +84,13 @@ LEFT JOIN rdr.code co_a
 WHERE
     pa.withdrawal_status != 2
     AND hp.name != 'TEST'
-    AND 
+    AND
     (
         (qra.value_code_id IS NOT NULL AND co_a.code_id IS NOT NULL)
-        OR qra.value_integer IS NOT NULL 
+        OR qra.value_integer IS NOT NULL
         OR qra.value_decimal IS NOT NULL
         OR qra.value_boolean IS NOT NULL
-        OR qra.value_date IS NOT NULL 
+        OR qra.value_date IS NOT NULL
         OR qra.value_datetime IS NOT NULL
         OR qra.value_string IS NOT NULL
     )
@@ -187,7 +187,7 @@ FROM
         t1.latest_date_of_survey    AS latest_date_of_survey,
         MAX(DATE(t2.value_date))    AS date_of_birth,
         NULL                        AS latest_date_of_location
-    FROM 
+    FROM
         (
         SELECT
             src_c.participant_id        AS participant_id,
@@ -271,11 +271,11 @@ SELECT
     COALESCE(vc2.concept_id, 0)         AS question_concept_id,
     src_c.value_ppi_code                AS value_ppi_code,
     src_c.topic_value                   AS topic_value,
-    src_c.value_code_id                 AS value_code_id, 
+    src_c.value_code_id                 AS value_code_id,
     COALESCE(vc3.concept_id, 0)         AS value_source_concept_id,
     COALESCE(vc4.concept_id, 0)         AS value_concept_id,
     src_c.value_number                  AS value_number,
-    src_c.value_boolean                 AS value_boolean,   
+    src_c.value_boolean                 AS value_boolean,
     CASE
         WHEN src_c.value_boolean = 1 THEN 45877994
         WHEN src_c.value_boolean = 0 THEN 45878245
@@ -284,11 +284,11 @@ SELECT
     src_c.value_date                    AS value_date,
     src_c.value_string                  AS value_string,
     src_c.questionnaire_response_id     AS questionnaire_response_id,
-    src_c.unit_id                       AS unit_id 
+    src_c.unit_id                       AS unit_id
 FROM cdm.src_clean src_c
 JOIN cdm.src_participant src_p
     ON  src_c.participant_id = src_p.participant_id
-LEFT JOIN voc.concept vc1 
+LEFT JOIN voc.concept vc1
     ON  src_c.question_ppi_code = vc1.concept_code
     AND vc1.vocabulary_id = 'PPI'
 LEFT JOIN voc.concept_relationship vcr1
@@ -298,14 +298,14 @@ LEFT JOIN voc.concept_relationship vcr1
 LEFT JOIN voc.concept vc2
     ON  vcr1.concept_id_2 = vc2.concept_id
     AND vc2.standard_concept = 'S'
-LEFT JOIN voc.concept vc3 
+LEFT JOIN voc.concept vc3
     ON  src_c.value_ppi_code = vc3.concept_code
     AND vc3.vocabulary_id = 'PPI'
 LEFT JOIN voc.concept_relationship vcr2
     ON  vc3.concept_id = vcr2.concept_id_1
     AND vcr2.relationship_id = 'Maps to'
     AND vcr2.invalid_reason IS NULL
-LEFT JOIN voc.concept vc4 
+LEFT JOIN voc.concept vc4
     ON  vcr2.concept_id_2 = vc4.concept_id
     AND vc4.standard_concept = 'S'
 ;
@@ -340,15 +340,15 @@ SELECT
     src_m.participant_id,
     src_m.question_ppi_code,
     src_m.value_string,
-    IF(src_m.question_ppi_code = 'PIIAddress_StreetAddress', 
+    IF(src_m.question_ppi_code = 'PIIAddress_StreetAddress',
                 src_m.value_string, NULL)                          AS address_1,
-    IF(src_m.question_ppi_code = 'PIIAddress_StreetAddress2', 
+    IF(src_m.question_ppi_code = 'PIIAddress_StreetAddress2',
                 src_m.value_string, NULL)                          AS address_2,
-    IF(src_m.question_ppi_code = 'StreetAddress_PIICity', 
+    IF(src_m.question_ppi_code = 'StreetAddress_PIICity',
                 src_m.value_string, NULL)                          AS city,
-    IF(src_m.question_ppi_code = 'StreetAddress_PIIZIP', 
+    IF(src_m.question_ppi_code = 'StreetAddress_PIIZIP',
                 src_m.value_string, NULL)                          AS zip,
-    IF(src_m.question_ppi_code = 'StreetAddress_PIIState' AND src_m.topic_value = 'States', 
+    IF(src_m.question_ppi_code = 'StreetAddress_PIIState' AND src_m.topic_value = 'States',
                 src_m.value_ppi_code, NULL)                        AS state_ppi_code
 FROM cdm.src_mapped src_m
 INNER JOIN cdm.src_participant src_p
@@ -356,17 +356,17 @@ INNER JOIN cdm.src_participant src_p
     AND src_m.date_of_survey = src_p.latest_date_of_location
 WHERE
     src_m.question_ppi_code IN (
-        'PIIAddress_StreetAddress', 
-        'PIIAddress_StreetAddress2', 
-        'StreetAddress_PIICity', 
-        'StreetAddress_PIIZIP', 
+        'PIIAddress_StreetAddress',
+        'PIIAddress_StreetAddress2',
+        'StreetAddress_PIICity',
+        'StreetAddress_PIIZIP',
         'StreetAddress_PIIState'
     )
 ;
 
 INSERT cdm.src_person_location
-SELECT 
-    src.participant_id                          AS participant_id,     
+SELECT
+    src.participant_id                          AS participant_id,
     MAX(src.address_1)                          AS address_1,
     MAX(src.address_2)                          AS address_2,
     MAX(src.city)                               AS city,
@@ -376,7 +376,7 @@ SELECT
 FROM cdm.temp_src_person_location src
 GROUP BY
     src.participant_id
-HAVING 
+HAVING
     COUNT(DISTINCT src.address_1) <= 2
     AND COUNT(DISTINCT src.address_2) <= 2
     AND COUNT(DISTINCT src.city) <= 2
@@ -622,7 +622,7 @@ SELECT NULL INTO @reset_num;
 DROP TABLE IF EXISTS cdm.tmp_procedure_occurrence;
 
 CREATE TABLE cdm.tmp_procedure_occurrence AS
-SELECT 
+SELECT
     @partition_expr := CONCAT_WS('-',
                         t.person_id,
                         t.procedure_concept_id,
@@ -654,7 +654,7 @@ SELECT
     t.procedure_source_concept_id                       AS procedure_source_concept_id,
     t.qualifier_source_value                            AS qualifier_source_value,
     t.unit_id                                           AS unit_id
-FROM 
+FROM
     cdm.procedure_occurrence t
 ORDER BY
     t.person_id,
@@ -667,7 +667,7 @@ ORDER BY
 TRUNCATE TABLE cdm.procedure_occurrence;
 
 INSERT INTO cdm.procedure_occurrence
-SELECT 
+SELECT
     t.procedure_occurrence_id,
     t.person_id,
     t.procedure_concept_id,
@@ -940,7 +940,7 @@ SELECT
     NULL                                    AS visit_occurrence_id,
     src_meas.participant_id                 AS person_id,
     9202                                    AS visit_concept_id, -- 9202 - 'Outpatient Visit'
-    DATE(MIN(src_meas.measurement_time))    AS visit_start_date,       
+    DATE(MIN(src_meas.measurement_time))    AS visit_start_date,
     TIME(MIN(src_meas.measurement_time))    AS visit_start_time,
     DATE(MAX(src_meas.measurement_time))    AS visit_end_date,
     TIME(MAX(src_meas.measurement_time))    AS visit_end_time,
@@ -956,7 +956,7 @@ LEFT JOIN cdm.care_site cs
 GROUP BY
     src_meas.participant_id,
     cs.care_site_id,
-    src_meas.physical_measurements_id 
+    src_meas.physical_measurements_id
 ;
 
 -- -------------------------------------------------------------------
@@ -1063,7 +1063,7 @@ SELECT NULL INTO @reset_num;
 DROP TABLE IF EXISTS cdm.tmp_observation;
 
 CREATE TABLE cdm.tmp_observation AS
-SELECT 
+SELECT
     @partition_expr := CONCAT_WS('-',
                         t.person_id,
                         t.observation_concept_id,
@@ -1112,13 +1112,13 @@ SELECT
     t.questionnaire_response_id                         AS questionnaire_response_id,
     t.meas_id                                           AS meas_id,
     t.unit_id                                           AS unit_id
-FROM 
+FROM
     cdm.observation t
 ORDER BY
     t.person_id,
     t.observation_concept_id,
     t.observation_date,
-    t.observation_time, 
+    t.observation_time,
     t.observation_type_concept_id,
     t.value_as_number,
     t.value_as_string,
@@ -1133,7 +1133,7 @@ ORDER BY
 TRUNCATE TABLE cdm.observation;
 
 INSERT INTO cdm.observation
-SELECT 
+SELECT
     t.observation_id,
     t.person_id,
     t.observation_concept_id,
@@ -1189,7 +1189,7 @@ SELECT DISTINCT
     TIME(meas.measurement_time)             AS measurement_time,
     44818701                                AS measurement_type_concept_id,  -- 44818701, From physical examination
     0                                       AS operator_concept_id,
-    meas.value_decimal                      AS value_as_number, 
+    meas.value_decimal                      AS value_as_number,
     0                                       AS value_as_concept_id,
     meas.vu_concept_id                      AS unit_concept_id,
     NULL                                    AS range_low,
@@ -1198,7 +1198,7 @@ SELECT DISTINCT
     vis.visit_occurrence_id                 AS visit_occurrence_id,
     meas.code_value                         AS measurement_source_value,
     meas.cv_source_concept_id               AS measurement_source_concept_id,
-    meas.value_unit                         AS unit_source_value, 
+    meas.value_unit                         AS unit_source_value,
     CONCAT(meas.value_decimal, ' - ', meas.value_unit)                    AS value_source_value,
     meas.measurement_id                     AS meas_id,
     meas.parent_id                          AS parent_id,
@@ -1228,7 +1228,7 @@ SELECT DISTINCT
     TIME(meas.measurement_time)             AS measurement_time,
     44818701                                AS measurement_type_concept_id, -- 44818701, From physical examination
     0                                       AS operator_concept_id,
-    NULL                                    AS value_as_number, 
+    NULL                                    AS value_as_number,
     meas.vcv_concept_id                     AS value_as_concept_id,
     0                                       AS unit_concept_id,
     NULL                                    AS range_low,
@@ -1237,7 +1237,7 @@ SELECT DISTINCT
     vis.visit_occurrence_id                 AS visit_occurrence_id,
     meas.code_value                         AS measurement_source_value,
     meas.cv_source_concept_id               AS measurement_source_concept_id,
-    NULL                                    AS unit_source_value, 
+    NULL                                    AS unit_source_value,
     meas.value_code_value                   AS value_source_value,
     meas.measurement_id                     AS meas_id,
     meas.parent_id                          AS parent_id,
@@ -1267,7 +1267,7 @@ SELECT DISTINCT
     TIME(meas.measurement_time)             AS measurement_time,
     44818701                                AS measurement_type_concept_id, -- 44818701, From physical examination
     0                                       AS operator_concept_id,
-    NULL                                    AS value_as_number, 
+    NULL                                    AS value_as_number,
     0                                       AS value_as_concept_id,
     0                                       AS unit_concept_id,
     NULL                                    AS range_low,
@@ -1276,7 +1276,7 @@ SELECT DISTINCT
     vis.visit_occurrence_id                 AS visit_occurrence_id,
     meas.code_value                         AS measurement_source_value,
     meas.cv_source_concept_id               AS measurement_source_concept_id,
-    NULL                                    AS unit_source_value, 
+    NULL                                    AS unit_source_value,
     NULL                                    AS value_source_value,
     meas.measurement_id                     AS meas_id,
     meas.parent_id                          AS parent_id,
@@ -1304,7 +1304,7 @@ SELECT NULL INTO @reset_num;
 DROP TABLE IF EXISTS cdm.tmp_measurement;
 
 CREATE TABLE cdm.tmp_measurement AS
-SELECT 
+SELECT
     @partition_expr := CONCAT_WS('-',
                         t.person_id,
                         t.measurement_concept_id,
@@ -1356,7 +1356,7 @@ SELECT
     t.meas_id                                                   AS meas_id,
     t.parent_id                                                 AS parent_id,
     t.unit_id                                                   AS unit_id
-FROM 
+FROM
     cdm.measurement t
 ORDER BY
     t.person_id,
@@ -1377,7 +1377,7 @@ ORDER BY
 TRUNCATE TABLE cdm.measurement;
 
 INSERT INTO cdm.measurement
-SELECT 
+SELECT
     t.measurement_id,
     t.person_id,
     t.measurement_concept_id,
@@ -1455,7 +1455,7 @@ SELECT NULL INTO @reset_num;
 DROP TABLE IF EXISTS cdm.tmp_condition_occurrence;
 
 CREATE TABLE cdm.tmp_condition_occurrence AS
-SELECT 
+SELECT
     @partition_expr := CONCAT_WS('-',
                         t.person_id,
                         t.condition_concept_id,
@@ -1491,7 +1491,7 @@ SELECT
     t.condition_source_value                                    AS condition_source_value,
     t.condition_source_concept_id                               AS condition_source_concept_id,
     t.unit_id                                                   AS unit_id
-FROM 
+FROM
     cdm.condition_occurrence t
 ORDER BY
     t.person_id,
@@ -1506,7 +1506,7 @@ ORDER BY
 TRUNCATE TABLE cdm.condition_occurrence;
 
 INSERT INTO cdm.condition_occurrence
-SELECT 
+SELECT
     t.condition_occurrence_id,
     t.person_id,
     t.condition_concept_id,
@@ -1593,7 +1593,7 @@ SELECT
 FROM
     ( SELECT
         @partition_expr := CONCAT(  person_id,
-                                    '-', 
+                                    '-',
                                     condition_concept_id)           AS partition_expr,
         @reset_num :=
             CASE
@@ -1653,7 +1653,7 @@ SELECT
 FROM  (
         SELECT
             @partition_expr := CONCAT(  person_id,
-                                        '-', 
+                                        '-',
                                         condition_concept_id)           AS partition_expr,
             @reset_num :=
                 CASE
