@@ -11,11 +11,6 @@ from participant_enums import SampleStatus
 from test.unit_test.unit_test_util import FlaskTestBase
 from test.test_data import load_biobank_order_json
 
-
-def _callthrough(fn, *args, **kwargs):
-  fn(*args, **kwargs)
-
-
 class DataGenApiTest(testutil.CloudStorageTestBase, FlaskTestBase):
   def setUp(self):
     # Neither CloudStorageTestBase nor our FlaskTestBase correctly calls through to
@@ -23,7 +18,6 @@ class DataGenApiTest(testutil.CloudStorageTestBase, FlaskTestBase):
     testutil.CloudStorageTestBase.setUp(self)
     FlaskTestBase.setUp(self)
 
-  @mock.patch('google.appengine.ext.deferred.defer', new=_callthrough)
   def test_generate_samples(self):
     participant_id = self.send_post('Participant', {})['participantId']
     self.send_consent(participant_id)
