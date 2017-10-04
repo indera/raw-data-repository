@@ -1,5 +1,3 @@
-import mock
-
 from testlib import testutil
 
 from dao.biobank_order_dao import BiobankOrderDao
